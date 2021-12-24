@@ -94,16 +94,18 @@ PERMISSIONS.forEach((permissionText, i) => {
   const [xPos, yPos] = arcWords.centroid(angle)
   appendTo(wheel, 'text', {
     fill: '#223344',
+    'font-size': '1.5em',
     transform: `translate(${xPos - 30}, ${yPos})`,
   }, permissionText)
 })
 
-wheel.querySelectorAll('.permission').forEach( sectorElem =>
-  sectorElem.addEventListener('click', () => {
+wheel.querySelectorAll('.permission').forEach( sectorElem => {
+  const resetPermissionSector = () => {
     const data = JSON.parse(sectorElem.getAttribute('data'))
     wheel.querySelectorAll(`.permission_${data.permission}`).forEach(
       el => el.setAttribute('fill', 'transparent')
     )
     sectorElem.setAttribute('fill', '#4444aa')
-  })
-)
+  }
+  sectorElem.addEventListener('click', resetPermissionSector)
+})
