@@ -69,8 +69,8 @@ Array.from({ length: NUM_LEVELS }, (_, x) => {
 // draw permission labels
 const labelArc = d3
   .arc()
-  .innerRadius(340)
-  .outerRadius(340)
+  .innerRadius(345)
+  .outerRadius(345)
   .startAngle(([startAngle, endAngle]) => startAngle)
   .endAngle(([startAngle, endAngle]) => endAngle)
 
@@ -81,12 +81,56 @@ PERMISSIONS.forEach((permLabel, index) => {
     .append("text")
     .attr("fill", "#223344")
     .attr("font-size", "1.5em")
-    .attr("transform", `translate(${xPos - 30}, ${yPos})`)
+    .attr("transform", `translate(${xPos - 45}, ${yPos})`)
     .text(permLabel)
 })
 
-// draw quadrants
+// draw quadrant arrows
+const arrowRadius = radius + 10
+
 d3.select(svgBox)
+  .append("path")
+  .attr("stroke", "#223344")
+  .attr("stroke-width", "4px")
+  .attr(
+    "d",
+    d3.line()([
+      [-arrowRadius, 0],
+      [arrowRadius, 0],
+    ]),
+  )
+d3.select(svgBox)
+  .append("path")
+  .attr("fill", "#223344")
+  .attr("transform", `translate(${arrowRadius} 0) rotate(90)`)
+  .attr("d", d3.symbol(d3.symbolTriangle, 300)())
+d3.select(svgBox)
+  .append("path")
+  .attr("fill", "#223344")
+  .attr("transform", `translate(-${arrowRadius} 0) rotate(270)`)
+  .attr("d", d3.symbol(d3.symbolTriangle, 300)())
+
+d3.select(svgBox)
+  .append("path")
+  .attr("stroke", "#223344")
+  .attr("stroke-width", "4px")
+  .attr(
+    "d",
+    d3.line()([
+      [0, -arrowRadius],
+      [0, arrowRadius],
+    ]),
+  )
+d3.select(svgBox)
+  .append("path")
+  .attr("fill", "#223344")
+  .attr("transform", `translate(0, -${arrowRadius})`)
+  .attr("d", d3.symbol(d3.symbolTriangle, 300)())
+d3.select(svgBox)
+  .append("path")
+  .attr("fill", "#223344")
+  .attr("transform", `rotate(180) translate(0, -${arrowRadius})`)
+  .attr("d", d3.symbol(d3.symbolTriangle, 300)())
 
 // setup events
 svgBox.querySelectorAll(".permission").forEach((sectorElem) => {
