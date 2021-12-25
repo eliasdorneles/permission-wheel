@@ -192,15 +192,29 @@ drawTextBox("Me and others", -380, 250)
 drawTextBox("Me and the world", 250, 250)
 
 // setup events
+const isRainbowMode = () => {
+  try {
+    const params = new URLSearchParams(new URL(document.URL).search)
+    return params.get("rainbow") === "1"
+  } catch (err) {
+    return false
+  }
+}
+
 svgBox.querySelectorAll(".permission").forEach((sectorElem) => {
   const resetPermissionSector = () => {
     const data = JSON.parse(sectorElem.getAttribute("data"))
     svgBox
       .querySelectorAll(`.permission_${data.permission}`)
       .forEach((el) => el.setAttribute("fill", "transparent"))
-    const color = "#4444aa"
-    // const color = d3.interpolateRainbow(data.permission / PERMISSIONS.length - 0.5)
-    sectorElem.setAttribute("fill", color)
+    const defaultColor = "#4444aa"
+    console.log('isRainbowMode()', isRainbowMode())
+    sectorElem.setAttribute(
+      "fill",
+      isRainbowMode()
+        ? d3.interpolateRainbow(data.permission / PERMISSIONS.length - 0.5)
+        : defaultColor,
+    )
   }
   sectorElem.addEventListener("click", resetPermissionSector)
 })
