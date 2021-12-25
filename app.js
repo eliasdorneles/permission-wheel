@@ -1,4 +1,4 @@
-const wheel = document.getElementById("wheel")
+const svgBox = document.getElementById("svgBox")
 
 const radius = 310
 const n = 16
@@ -31,8 +31,15 @@ const PERMISSIONS = [
 
 const NUM_LEVELS = 10
 
-Array.from({ length: NUM_LEVELS }, (_, i) => {
-  const level = 10 - i
+const calcAngle = (i, n) => {
+  const start = (i / n) * 2 * Math.PI
+  const end = ((i + 1) / n) * 2 * Math.PI
+  return [start, end]
+}
+
+// draw wheel
+Array.from({ length: NUM_LEVELS }, (_, x) => {
+  const level = 10 - x
   const arc = d3
     .arc()
     .innerRadius(0)
@@ -40,50 +47,52 @@ Array.from({ length: NUM_LEVELS }, (_, i) => {
     .startAngle(([startAngle, endAngle]) => startAngle)
     .endAngle(([startAngle, endAngle]) => endAngle)
 
-  const n = PERMISSIONS.length
-  Array.from({ length: n }, (_, i) => {
-    const angle = [(i / n) * 2 * Math.PI, ((i + 1) / n) * 2 * Math.PI]
-    d3.select(wheel)
+  PERMISSIONS.forEach((_, index) => {
+    d3.select(svgBox)
       .append("path")
       .attr("stroke", "#bbbbbb")
       .attr("stroke-width", "2px")
       .attr("cursor", "pointer")
       .attr("fill", "transparent")
-      .attr("d", arc(angle))
-      .classed(`permission permission_${i} level_${level}`, true)
+      .attr("d", arc(calcAngle(index, PERMISSIONS.length)))
+      .classed(`permission permission_${index} level_${level}`, true)
       .attr(
         "data",
         JSON.stringify({
-          permission: i,
+          permission: index,
           level: level,
         }),
       )
   })
 })
 
-const arcWords = d3
+// draw permission labels
+const labelArc = d3
   .arc()
   .innerRadius(340)
   .outerRadius(340)
   .startAngle(([startAngle, endAngle]) => startAngle)
   .endAngle(([startAngle, endAngle]) => endAngle)
 
-PERMISSIONS.forEach((permissionText, i) => {
-  const n = PERMISSIONS.length
-  const angle = [(i / n) * 2 * Math.PI, ((i + 1) / n) * 2 * Math.PI]
-  const [xPos, yPos] = arcWords.centroid(angle)
-  d3.select(wheel)
+PERMISSIONS.forEach((permLabel, index) => {
+  const angle = calcAngle(index, PERMISSIONS.length)
+  const [xPos, yPos] = labelArc.centroid(angle)
+  d3.select(svgBox)
     .append("text")
     .attr("fill", "#223344")
     .attr("font-size", "1.5em")
     .attr("transform", `translate(${xPos - 30}, ${yPos})`)
-    .text(permissionText)
+    .text(permLabel)
 })
 
-wheel.querySelectorAll(".permission").forEach((sectorElem) => {
+// draw quadrants
+d3.select(svgBox)
+
+// setup events
+svgBox.querySelectorAll(".permission").forEach((sectorElem) => {
   const resetPermissionSector = () => {
     const data = JSON.parse(sectorElem.getAttribute("data"))
-    wheel
+    svgBox
       .querySelectorAll(`.permission_${data.permission}`)
       .forEach((el) => el.setAttribute("fill", "transparent"))
     const color = "#4444aa"
