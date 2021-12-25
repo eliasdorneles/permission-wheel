@@ -212,7 +212,7 @@ svgBox.querySelectorAll(".permission").forEach((sectorElem) => {
     sectorElem.setAttribute(
       "fill",
       isRainbowMode()
-        ? d3.interpolateRainbow(data.permission / PERMISSIONS.length - 0.5)
+        ? d3.interpolateRainbow(data.permission / PERMISSIONS.length - 0.7)
         : defaultColor,
     )
   }
