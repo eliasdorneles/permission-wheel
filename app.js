@@ -1,124 +1,64 @@
 const TRANSLATIONS = {
-  "en": {
-    "title": "The Permission Wheel",
-    "quadrants": [
+  en: {
+    title: "The Permission Wheel",
+    quadrants: [
       {
-        "name": "Me and my feelings",
-        "permissions": [
-          "Joy",
-          "Anger",
-          "Fear",
-          "Sadness",
-        ],
+        name: "Me and my feelings",
+        permissions: ["Joy", "Anger", "Fear", "Sadness"],
       },
       {
-        "name": "Me and the world",
-        "permissions": [
-          "Succeed",
-          "Think",
-          "Know",
-          "Grow up",
-        ],
+        name: "Me and the world",
+        permissions: ["Succeed", "Think", "Know", "Grow up"],
       },
       {
-        "name": "Me and others",
-        "permissions": [
-          "Be a Child",
-          "Be Close",
-          "Belong",
-          "Trust",
-        ],
+        name: "Me and others",
+        permissions: ["Be a Child", "Be Close", "Belong", "Trust"],
       },
       {
-        "name": "Me and myself",
-        "permissions": [
-          "Pleasure",
-          "Self",
-          "Health",
-          "Exist",
-        ],
+        name: "Me and myself",
+        permissions: ["Pleasure", "Self", "Health", "Exist"],
       },
     ],
   },
-  "fr": {
-    "title": "La Roue des Permissions",
-    "quadrants": [
+  fr: {
+    title: "La Roue des Permissions",
+    quadrants: [
       {
-        "name": "Moi et mes sentiments",
-        "permissions": [
-          "Joie",
-          "Colère",
-          "Peur",
-          "Tristesse",
-        ],
+        name: "Moi et mes sentiments",
+        permissions: ["Joie", "Colère", "Peur", "Tristesse"],
       },
       {
-        "name": "Moi et le monde",
-        "permissions": [
-          "Réussir",
-          "Penser",
-          "Savoir",
-          "Grandir",
-        ],
+        name: "Moi et le monde",
+        permissions: ["Réussir", "Penser", "Savoir", "Grandir"],
       },
       {
-        "name": "Moi et les autres",
-        "permissions": [
-          "Être enfant",
-          "Être proche",
-          "Appartenir",
-          "Faire confiance",
-        ],
+        name: "Moi et les autres",
+        permissions: ["Être enfant", "Être proche", "Appartenir", "Faire confiance"],
       },
       {
-        "name": "Moi et moi-même",
-        "permissions": [
-          "Plaisir",
-          "Être moi-même",
-          "Santé",
-          "Exister",
-        ],
+        name: "Moi et moi-même",
+        permissions: ["Plaisir", "Être moi-même", "Santé", "Exister"],
       },
     ],
   },
-  "pt": {
-    "title": "A Roda das Permissões",
-    "quadrants": [
+  pt: {
+    title: "A Roda das Permissões",
+    quadrants: [
       {
-        "name": "Eu e meus sentimentos",
-        "permissions": [
-          "Alegria",
-          "Raiva",
-          "Medo",
-          "Tristeza",
-        ],
+        name: "Eu e meus sentimentos",
+        permissions: ["Alegria", "Raiva", "Medo", "Tristeza"],
       },
       {
-        "name": "Eu e o mundo",
-        "permissions": [
-          "Ter sucesso",
-          "Pensar",
-          "Saber",
-          "Crescer",
-        ],
+        name: "Eu e o mundo",
+        permissions: ["Ter sucesso", "Pensar", "Saber", "Crescer"],
       },
       {
-        "name": "Eu e os outros",
-        "permissions": [
-          "Ser criança",
-          "Ser próximo",
-          "Pertencer",
-          "Confiar",
-        ],
+        name: "Eu e os outros",
+        permissions: ["Ser criança", "Ser próximo", "Pertencer", "Confiar"],
       },
       {
-        "name": "Eu e eu mesmo",
-        "permissions": [
-          "Prazer",
-          "Ser eu mesmo",
-          "Saúde",
-          "Existir",
-        ],
+        name: "Eu e eu mesmo",
+        permissions: ["Prazer", "Ser eu mesmo", "Saúde", "Existir"],
       },
     ],
   },
@@ -309,7 +249,6 @@ const drawWheel = () => {
       .call(wrap, textWidth - 15)
   }
 
-
   drawTextBox(QUADRANT_NAMES[0], 250, -350)
   drawTextBox(QUADRANT_NAMES[1], 250, 250)
   drawTextBox(QUADRANT_NAMES[2], -380, 250)
@@ -319,15 +258,12 @@ const drawWheel = () => {
   d3.select("#wheel-title").text(WHEEL_TITLE)
 }
 
-
 const switchLanguage = (lang) => {
   setLanguage(lang)
   clearWheel()
   drawWheel()
+  setupEvents()
 }
-
-setLanguage("en")
-drawWheel()
 
 // setup events
 const isRainbowMode = () => {
@@ -339,20 +275,66 @@ const isRainbowMode = () => {
   }
 }
 
-svgBox.querySelectorAll(".permission").forEach((sectorElem) => {
-  const resetPermissionSector = () => {
-    const data = JSON.parse(sectorElem.getAttribute("data"))
-    svgBox
-      .querySelectorAll(`.permission_${data.permission}`)
-      .forEach((el) => el.setAttribute("fill", "transparent"))
-    const defaultColor = "#4444aa"
-    console.log('isRainbowMode()', isRainbowMode())
-    sectorElem.setAttribute(
-      "fill",
-      isRainbowMode()
-        ? d3.interpolateRainbow(data.permission / PERMISSIONS.length - 0.7)
-        : defaultColor,
-    )
+const resetPermissionSector = (sectorElement) => {
+  const data = JSON.parse(sectorElement.getAttribute("data"))
+  svgBox
+    .querySelectorAll(`.permission_${data.permission}`)
+    .forEach((el) => el.setAttribute("fill", "transparent"))
+  const defaultColor = "#4444aa"
+  sectorElement.setAttribute(
+    "fill",
+    isRainbowMode()
+      ? d3.interpolateRainbow(data.permission / PERMISSIONS.length - 0.7)
+      : defaultColor,
+  )
+}
+
+const resetPermissionSectorIfDraggedInsideSector = (element) => {
+  if (!draggedElement) {
+    return
   }
-  sectorElem.addEventListener("click", resetPermissionSector)
-})
+  const draggedElementData = JSON.parse(draggedElement.getAttribute("data"))
+  const elementData = JSON.parse(element.getAttribute("data"))
+  if (draggedElementData.permission === elementData.permission) {
+    resetPermissionSector(element)
+  }
+}
+
+// define a variable to store the current dragged element
+let draggedElement = null
+
+const handleDragStart = (event) => {
+  draggedElement = event.target
+}
+
+const handleDragEnd = (event) => {
+  resetPermissionSectorIfDraggedInsideSector(event.target)
+  draggedElement = null
+}
+
+const handleMouseOver = (event) => {
+  resetPermissionSectorIfDraggedInsideSector(event.target)
+}
+
+const handleTouchOrClick = (event) => {
+  if (draggedElement === event.target) {
+    // if the element was dragged and then released, do nothing
+    return
+  }
+  resetPermissionSector(event.target)
+}
+
+const setupEvents = () => {
+  svgBox.querySelectorAll(".permission").forEach((sectorElem) => {
+    sectorElem.addEventListener("mousedown", handleDragStart)
+    sectorElem.addEventListener("mouseup", handleDragEnd)
+    sectorElem.addEventListener("mouseover", handleMouseOver)
+    sectorElem.addEventListener("touchstart", handleDragStart)
+    sectorElem.addEventListener("touchend", handleDragEnd)
+    sectorElem.addEventListener("click", handleTouchOrClick)
+  })
+}
+
+setLanguage("en")
+drawWheel()
+setupEvents()
