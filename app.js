@@ -19,6 +19,8 @@ const TRANSLATIONS = {
         permissions: ["Pleasure", "Self", "Health", "Exist"],
       },
     ],
+    copyLink: "Copy link",
+    copied: "Copied!",
   },
   fr: {
     title: "La Roue des Permissions",
@@ -40,6 +42,8 @@ const TRANSLATIONS = {
         permissions: ["Plaisir", "Être moi-même", "Santé", "Exister"],
       },
     ],
+    copyLink: "Copier le lien",
+    copied: "C'est copié !",
   },
   pt: {
     title: "A Roda das Permissões",
@@ -61,6 +65,8 @@ const TRANSLATIONS = {
         permissions: ["Prazer", "Ser eu mesmo", "Saúde", "Existir"],
       },
     ],
+    copyLink: "Copiar link",
+    copied: "Link copiado!",
   },
 }
 
@@ -104,7 +110,7 @@ const svgBox = document.getElementById("svgBox")
 const radius = 310
 const n = 16
 
-let lang = "en"
+let CURRENT_LANGUAGE = "en"
 
 // translatable strings
 let PERMISSIONS = null
@@ -113,14 +119,17 @@ let WHEEL_TITLE = null
 
 const NUM_LEVELS = 10
 
+// permissions data
+let PERMISSION_LEVELS = Array.from({ length: 16 }, () => 0)
+
 const setLanguage = (newLang) => {
-  lang = newLang
-  PERMISSIONS = TRANSLATIONS[lang].quadrants.reduce(
+  CURRENT_LANGUAGE = newLang
+  PERMISSIONS = TRANSLATIONS[CURRENT_LANGUAGE].quadrants.reduce(
     (acc, { permissions }) => [...acc, ...permissions],
     [],
   )
-  QUADRANT_NAMES = TRANSLATIONS[lang].quadrants.map(({ name }) => name)
-  WHEEL_TITLE = TRANSLATIONS[lang].title
+  QUADRANT_NAMES = TRANSLATIONS[CURRENT_LANGUAGE].quadrants.map(({ name }) => name)
+  WHEEL_TITLE = TRANSLATIONS[CURRENT_LANGUAGE].title
 }
 
 const calcAngle = (i, n) => {
@@ -258,13 +267,6 @@ const drawWheel = () => {
   d3.select("#wheel-title").text(WHEEL_TITLE)
 }
 
-const switchLanguage = (lang) => {
-  setLanguage(lang)
-  clearWheel()
-  drawWheel()
-  setupEvents()
-}
-
 // setup events
 const isRainbowMode = () => {
   try {
@@ -275,18 +277,31 @@ const isRainbowMode = () => {
   }
 }
 
-const resetPermissionSector = (sectorElement) => {
+const getColor = (permission) => {
+  const defaultColor = "#4444aa"
+  if (isRainbowMode()) {
+    return d3.interpolateRainbow(permission / PERMISSIONS.length - 0.7)
+  }
+  return defaultColor
+}
+
+const resetPermissionSectorFromDOMElement = (sectorElement) => {
   const data = JSON.parse(sectorElement.getAttribute("data"))
   svgBox
     .querySelectorAll(`.permission_${data.permission}`)
     .forEach((el) => el.setAttribute("fill", "transparent"))
   const defaultColor = "#4444aa"
-  sectorElement.setAttribute(
-    "fill",
-    isRainbowMode()
-      ? d3.interpolateRainbow(data.permission / PERMISSIONS.length - 0.7)
-      : defaultColor,
-  )
+  sectorElement.setAttribute("fill", data.level === 0 ? defaultColor : getColor(data.permission))
+
+  // update permission level
+  PERMISSION_LEVELS[data.permission] = data.level
+}
+
+const resetPermissionSectorFromData = (permissionIndex, sectorLevel) => {
+  const sectorElement = svgBox.querySelector(`.permission_${permissionIndex}.level_${sectorLevel}`)
+  if (sectorElement) {
+    resetPermissionSectorFromDOMElement(sectorElement)
+  }
 }
 
 const resetPermissionSectorIfDraggedInsideSector = (element) => {
@@ -296,7 +311,7 @@ const resetPermissionSectorIfDraggedInsideSector = (element) => {
   const draggedElementData = JSON.parse(draggedElement.getAttribute("data"))
   const elementData = JSON.parse(element.getAttribute("data"))
   if (draggedElementData.permission === elementData.permission) {
-    resetPermissionSector(element)
+    resetPermissionSectorFromDOMElement(element)
   }
 }
 
@@ -321,7 +336,7 @@ const handleTouchOrClick = (event) => {
     // if the element was dragged and then released, do nothing
     return
   }
-  resetPermissionSector(event.target)
+  resetPermissionSectorFromDOMElement(event.target)
 }
 
 const setupEvents = () => {
@@ -335,6 +350,68 @@ const setupEvents = () => {
   })
 }
 
-setLanguage("en")
+const loadParameterFromUrl = (parameterName) => {
+  try {
+    const params = new URLSearchParams(new URL(document.URL).search)
+    return params.get(parameterName)
+  } catch (err) {
+    console.error(err)
+  }
+  return null
+}
+
+const loadPermissionLevelsFromUrl = () => {
+  permissionLevels = loadParameterFromUrl("permissions")
+  if (permissionLevels) {
+    return permissionLevels.split(",")
+  }
+  return null
+}
+
+const setPermissionLevels = (permissionLevels) => {
+  if (!permissionLevels) {
+    return
+  }
+  permissionLevels.forEach((level, permissionIndex) => {
+    resetPermissionSectorFromData(permissionIndex, level)
+  })
+}
+
+const generateUrl = () => {
+  const permissionLevels = PERMISSION_LEVELS.map((level) => String(level))
+  const url = new URL(document.URL)
+  url.searchParams.set("permissions", permissionLevels.join(","))
+  url.searchParams.set("rainbow", isRainbowMode() ? "1" : "0")
+  url.searchParams.set("lang", CURRENT_LANGUAGE)
+  return url.toString()
+}
+
+const copyUrlToClipboard = () => {
+  const url = generateUrl()
+  console.log(url)
+  navigator.clipboard.writeText(url)
+  const copyBtn = document.querySelector("#copyButton")
+  copyBtn.innerHTML = TRANSLATIONS[CURRENT_LANGUAGE].copied
+  setTimeout(() => {
+    copyBtn.innerHTML = TRANSLATIONS[CURRENT_LANGUAGE].copyLink
+  }, 2000)
+}
+
+const loadLanguageFromUrl = () => {
+  return loadParameterFromUrl("lang") || "en"
+}
+
+const switchLanguage = (lang) => {
+  setLanguage(lang)
+  clearWheel()
+  drawWheel()
+  setupEvents()
+  setPermissionLevels(PERMISSION_LEVELS)
+  const copyBtn = document.querySelector("#copyButton")
+  copyBtn.innerHTML = TRANSLATIONS[CURRENT_LANGUAGE].copyLink
+}
+
+setLanguage(loadLanguageFromUrl())
 drawWheel()
 setupEvents()
+setPermissionLevels(loadPermissionLevelsFromUrl())
